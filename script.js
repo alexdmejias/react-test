@@ -22,7 +22,7 @@ var ButtonFrame = React.createClass({
     switch(correct) {
       case true:
         button = (
-          <button className="btn btn-success btn-lg">
+          <button className="btn btn-success btn-lg" onClick={this.props.acceptAnswer}>
             <span className="glyphicon glyphicon-ok"></span>
           </button>
         );
@@ -45,6 +45,9 @@ var ButtonFrame = React.createClass({
     return (
       <div id="button-frame">
         {button}
+        <button onClick={this.props.redraw} className="btn btn-warning btn-sm">
+          <span className="glyphicon glyphicon-refresh"></span>
+        </button>
       </div>
     )
   }
@@ -72,15 +75,17 @@ var NumbersFrame = React.createClass({
     var maxNum = 10,
       numbers = [],
       selectNumber = this.props.selectNumber,
+      usedNumbers = this.props.usedNumbers,
       selectedNumbers = this.props.selectedNumbers;
 
     for (var i = 1 ; maxNum >= i; i++ ) {
-      var className = 'btn btn-danger' + (selectedNumbers.indexOf(i) >= 0 ? ' disabled' : '')
+      var className = 'btn btn-danger' + (selectedNumbers.indexOf(i) >= 0 ? ' disabled' : '');
+      className += ' used-' + (usedNumbers.indexOf(i) >= 0);
       numbers.push(<span className={className} onClick={selectNumber.bind(null, i)}>{i}</span>)
     }
 
     return (
-      <div id="answer-frame">
+      <div id="numbers-frame">
         <div  className="well">
           {numbers}
         </div>
@@ -93,13 +98,17 @@ var Game = React.createClass({
   getInitialState: function() {
     return {
       selectedNumbers: [],
+      usedNumbers: [],
       numOfStars: Math.floor(Math.random() * 9) + 1,
       correct: null
     }
   },
   selectNumber: function(num) {
     if (this.state.selectedNumbers.indexOf(num) < 0) {
-      this.setState({selectedNumbers: this.state.selectedNumbers.concat(num), correct: null})
+      this.setState({
+      	selectedNumbers: this.state.selectedNumbers.concat(num),
+      	correct: null
+      })
     }
   },
   sumOfSelectedNumbers: function() {
@@ -109,27 +118,53 @@ var Game = React.createClass({
     var correct = (this.state.numOfStars === this.sumOfSelectedNumbers());
     this.setState({correct: correct})
   },
+  acceptAnswer: function() {
+  	var usedNumbers = this.state.usedNumbers.concat(this.state.selectedNumbers);
+  	console.info(usedNumbers);
+  	this.setState({
+  		selectedNumbers: [],
+  		usedNumbers: usedNumbers,
+  		correct: null,
+  		numOfStars: Math.floor(Math.random() * 9) + 1
+  	});
+  },
+  redraw: function() {
+  	this.setState({
+  		selectedNumbers: [],
+  		correct: null,
+  		numOfStars: Math.floor(Math.random() * 9) + 1
+  	});
+  },
   deselectNumber: function(num) {
     var selectedNumbers = this.state.selectedNumbers,
       numIndex = selectedNumbers.indexOf(num);
 
     selectedNumbers.splice(numIndex, 1);
-    console.warn(selectedNumbers, numIndex);
     this.setState({selectedNumbers: selectedNumbers, correct: null})
   },
   render: function() {
     var correct = this.state.correct,
-      selectedNumbers = this.state.selectedNumbers;
+      selectedNumbers = this.state.selectedNumbers,
+      usedNumbers = this.state.usedNumbers;
     return (
       <div id="game">
         <h2> play nine</h2>
         <hr />
         <div>
           <StarsFrame numOfStars={this.state.numOfStars}/>
-          <ButtonFrame correct={correct} selectedNumbers={selectedNumbers} checkAnswer={this.checkAnswer}/>
-          <AnswerFrame selectedNumbers={selectedNumbers} deselectNumber={this.deselectNumber}/>
+          <ButtonFrame correct={correct}
+          							selectedNumbers={selectedNumbers}
+	        							acceptAnswer={this.acceptAnswer}
+          							redraw={this.redraw}
+          							checkAnswer={this.checkAnswer}/>
+
+          <AnswerFrame selectedNumbers={selectedNumbers}
+          							deselectNumber={this.deselectNumber}
+	        							acceptAnswer={this.acceptAnswer} />
         </div>
-        <NumbersFrame selectedNumbers={selectedNumbers} selectNumber={this.selectNumber}/>
+        <NumbersFrame selectedNumbers={selectedNumbers}
+        							usedNumbers={usedNumbers}
+        							selectNumber={this.selectNumber}/>
       </div>
     );
   }
