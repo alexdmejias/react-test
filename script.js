@@ -46,7 +46,7 @@ var ButtonFrame = React.createClass({
       <div id="button-frame">
         {button}
         <button onClick={this.props.redraw} className="btn btn-warning btn-sm">
-          <span className="glyphicon glyphicon-refresh"></span>
+          <span className="glyphicon glyphicon-refresh"></span> {this.props.redraws}
         </button>
       </div>
     )
@@ -99,7 +99,8 @@ var Game = React.createClass({
     return {
       selectedNumbers: [],
       usedNumbers: [],
-      numOfStars: Math.floor(Math.random() * 9) + 1,
+      numOfStars: this._randomNumber(),
+  		redraws: 5,
       correct: null
     }
   },
@@ -120,20 +121,22 @@ var Game = React.createClass({
   },
   acceptAnswer: function() {
   	var usedNumbers = this.state.usedNumbers.concat(this.state.selectedNumbers);
-  	console.info(usedNumbers);
   	this.setState({
   		selectedNumbers: [],
   		usedNumbers: usedNumbers,
   		correct: null,
-  		numOfStars: Math.floor(Math.random() * 9) + 1
+  		numOfStars: this._randomNumber()
   	});
   },
   redraw: function() {
-  	this.setState({
-  		selectedNumbers: [],
-  		correct: null,
-  		numOfStars: Math.floor(Math.random() * 9) + 1
-  	});
+  	if (this.state.redraws > 0) {
+	  	this.setState({
+	  		selectedNumbers: [],
+	  		correct: null,
+	  		numOfStars: this._randomNumber(),
+	  		redraws: this.state.redraws - 1
+	  	});
+  	}
   },
   deselectNumber: function(num) {
     var selectedNumbers = this.state.selectedNumbers,
@@ -142,9 +145,13 @@ var Game = React.createClass({
     selectedNumbers.splice(numIndex, 1);
     this.setState({selectedNumbers: selectedNumbers, correct: null})
   },
+  _randomNumber: function() {
+  	return Math.floor(Math.random() * 9) + 1
+  },
   render: function() {
     var correct = this.state.correct,
       selectedNumbers = this.state.selectedNumbers,
+      redraws = this.state.redraws,
       usedNumbers = this.state.usedNumbers;
     return (
       <div id="game">
@@ -156,6 +163,7 @@ var Game = React.createClass({
           							selectedNumbers={selectedNumbers}
 	        							acceptAnswer={this.acceptAnswer}
           							redraw={this.redraw}
+          							redraws={redraws}
           							checkAnswer={this.checkAnswer}/>
 
           <AnswerFrame selectedNumbers={selectedNumbers}
